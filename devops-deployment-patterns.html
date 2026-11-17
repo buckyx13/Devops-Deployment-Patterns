@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps & DevSecOps Deployment Patterns</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d2a8ff;
+    --accent4: #ffa657;
+    --accent5: #ff7b72;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --tag-bg: #1f2937;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a2332 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 32px 24px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  header h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  input[type="search"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 260px;
+    outline: none;
+  }
+  input[type="search"]:focus { border-color: var(--accent); }
+  input[type="search"]::placeholder { color: var(--muted); }
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(88,166,255,0.08);
+  }
+  .stats {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .main { padding: 0 0 40px; }
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 32px 10px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .group-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .group-header h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .group-header .count {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 32px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 1400px;
+  }
+  thead th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+  }
+  thead th:first-child { padding-left: 12px; min-width: 220px; }
+  thead th:last-child { border-right: none; min-width: 200px; }
+  tr.data-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tr.data-row:hover { background: var(--surface2); }
+  td {
+    padding: 10px 10px;
+    vertical-align: top;
+    border-right: 1px solid rgba(48,54,61,0.5);
+    color: var(--text);
+    line-height: 1.4;
+  }
+  td:first-child { padding-left: 12px; }
+  td:last-child { border-right: none; }
+  .approach-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 12.5px;
+    margin-bottom: 3px;
+  }
+  .approach-num {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 1px 2px 1px 0;
+    white-space: nowrap;
+  }
+  .tag-blue { background: rgba(88,166,255,0.12); color: #79c0ff; border: 1px solid rgba(88,166,255,0.2); }
+  .tag-green { background: rgba(63,185,80,0.12); color: #56d364; border: 1px solid rgba(63,185,80,0.2); }
+  .tag-purple { background: rgba(210,168,255,0.12); color: #d2a8ff; border: 1px solid rgba(210,168,255,0.2); }
+  .tag-orange { background: rgba(255,166,87,0.12); color: #ffa657; border: 1px solid rgba(255,166,87,0.2); }
+  .tag-red { background: rgba(255,123,114,0.12); color: #ff7b72; border: 1px solid rgba(255,123,114,0.2); }
+  .tag-teal { background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
+  .tag-yellow { background: rgba(210,180,80,0.12); color: #d4b54a; border: 1px solid rgba(210,180,80,0.2); }
+  .unique-text {
+    color: var(--accent2);
+    font-style: italic;
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+  .usecase-text {
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+  .group-section { margin-bottom: 0; }
+  .hidden { display: none; }
+  .no-results {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 10px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DevOps & <span>DevSecOps</span> Deployment Patterns</h1>
+  <div class="subtitle">55 production-proven toolchain combinations · grouped by pattern archetype</div>
+  <div class="controls">
+    <input type="search" id="searchInput" placeholder="Search tools, patterns, platforms…">
+    <button class="filter-btn active" onclick="filterGroup('all', this)">All</button>
+    <button class="filter-btn" onclick="filterGroup('gitops', this)">GitOps</button>
+    <button class="filter-btn" onclick="filterGroup('cicd', this)">CI/CD-Centric</button>
+    <button class="filter-btn" onclick="filterGroup('cloudnative', this)">Cloud-Native</button>
+    <button class="filter-btn" onclick="filterGroup('k8s', this)">Kubernetes-Native</button>
+    <button class="filter-btn" onclick="filterGroup('platformeng', this)">Platform Eng</button>
+    <button class="filter-btn" onclick="filterGroup('devsecops', this)">DevSecOps</button>
+    <button class="filter-btn" onclick="filterGroup('multicloud', this)">Multi-Cloud</button>
+    <button class="filter-btn" onclick="filterGroup('hybrid', this)">Hybrid</button>
+    <button class="filter-btn" onclick="filterGroup('onprem', this)">On-Premises</button>
+    <button class="filter-btn" onclick="filterGroup('enterprise', this)">Enterprise</button>
+    <span class="stats" id="statsLabel">55 patterns</span>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Source Control / CI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>Container / K8s</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d2a8ff"></div>GitOps / IaC</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffa657"></div>Security</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff7b72"></div>Observability</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div>Cloud Platform</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d4b54a"></div>Artifact / Registry</div>
+</div>
+
+<div class="main" id="mainContent">
+
+<!-- ============================================================ -->
+<!-- GROUP 1: GITOPS -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="gitops">
+<div class="group-header">
+  <div class="group-dot" style="background:#d2a8ff"></div>
+  <h2>GitOps Patterns</h2>
+  <span class="count" id="count-gitops">10</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">01 </span>GitHub + ArgoCD Classic</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">Docker Hub</span><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes (EKS/GKE/AKS)</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Dependabot</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">AWS / GCP / Azure</span></td>
+  <td class="unique-text">Pure GitOps — Git is the single source of truth for both app and infra. ArgoCD continuously reconciles cluster state.</td>
+  <td class="usecase-text">SaaS platforms, microservices, teams adopting GitOps from scratch</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">02 </span>GitLab + FluxCD</div></td>
+  <td><span class="tag tag-blue">GitLab</span></td>
+  <td><span class="tag tag-blue">GitLab CI/CD</span></td>
+  <td><span class="tag tag-yellow">Harbor</span><span class="tag tag-yellow">GitLab Registry</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">Kubernetes (self-managed)</span></td>
+  <td><span class="tag tag-purple">FluxCD v2</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">GitLab SAST</span></td>
+  <td><span class="tag tag-red">Loki</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">On-Prem / Private Cloud</span></td>
+  <td class="unique-text">Entire toolchain stays within GitLab; Flux uses OCI artifacts for manifest delivery. Pull-based deployment model.</td>
+  <td class="usecase-text">Privacy-sensitive orgs, regulated industries, self-hosted GitLab users</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">03 </span>GitHub + ArgoCD + ApplicationSets</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Crossplane</span></td>
+  <td><span class="tag tag-purple">Helm</span><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">EKS (multi-cluster)</span></td>
+  <td><span class="tag tag-purple">ArgoCD + ApplicationSets</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">OPA Gatekeeper</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">ApplicationSets enable one manifest to spawn deployments across dozens of clusters/environments automatically.</td>
+  <td class="usecase-text">Multi-tenant platforms, large-scale microservices fleets</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">04 </span>Bitbucket + FluxCD + Weave GitOps</div></td>
+  <td><span class="tag tag-blue">Bitbucket</span></td>
+  <td><span class="tag tag-blue">Bitbucket Pipelines</span></td>
+  <td><span class="tag tag-yellow">Nexus</span><span class="tag tag-yellow">Docker Hub</span></td>
+  <td><span class="tag tag-purple">Terraform</span><span class="tag tag-purple">Atlantis</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">Kubernetes (GKE)</span></td>
+  <td><span class="tag tag-purple">FluxCD + Weave GitOps UI</span></td>
+  <td><span class="tag tag-orange">Aqua Security</span><span class="tag tag-orange">Snyk</span></td>
+  <td><span class="tag tag-red">Grafana Cloud</span><span class="tag tag-red">ELK</span></td>
+  <td><span class="tag tag-teal">GCP</span></td>
+  <td class="unique-text">Weave GitOps adds a UI on top of Flux; Atlantis provides collaborative Terraform PR workflow.</td>
+  <td class="usecase-text">Atlassian-native shops moving to GitOps without abandoning Bitbucket/Jira</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">05 </span>GitHub + Argo Rollouts (Progressive Delivery)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">ArgoCD + Argo Rollouts</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Cosign</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Argo Rollouts UI</span></td>
+  <td><span class="tag tag-teal">Multi-cloud</span></td>
+  <td class="unique-text">Adds canary & blue/green with automated metric-based promotion/rollback built directly into GitOps workflow.</td>
+  <td class="usecase-text">High-traffic apps needing zero-downtime releases with data-driven rollout gates</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">06 </span>GitLab + ArgoCD (Separate GitOps Repo)</div></td>
+  <td><span class="tag tag-blue">GitLab</span></td>
+  <td><span class="tag tag-blue">GitLab CI/CD</span></td>
+  <td><span class="tag tag-yellow">GitLab Container Registry</span></td>
+  <td><span class="tag tag-purple">Terraform (GitLab-managed)</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes (AKS)</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">GitLab Ultimate SAST/DAST</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Azure Monitor</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">Azure</span></td>
+  <td class="unique-text">CI lives in GitLab; CD ownership moves to ArgoCD. Separate app-repo from config-repo pattern with strict change audit.</td>
+  <td class="usecase-text">Teams migrating from push-based CI/CD to GitOps without rewiring existing GitLab pipelines</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">07 </span>GitHub + Flux + SOPS Secrets</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">FluxCD + SOPS + Age</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Sealed Secrets / SOPS</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Loki</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Secrets are encrypted-at-rest in Git via SOPS+Age/GPG; no external vault required. Fully declarative secret management.</td>
+  <td class="usecase-text">Small/medium teams wanting GitOps without HashiCorp Vault complexity</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">08 </span>GitHub + ArgoCD + Vault (Secrets Injection)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD + Vault Secrets Operator</span></td>
+  <td><span class="tag tag-orange">HashiCorp Vault</span><span class="tag tag-orange">OPA</span></td>
+  <td><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Dynamic secrets injected at runtime via Vault Agent; zero static secrets ever stored in Git or container images.</td>
+  <td class="usecase-text">Financial services, PCI-DSS environments requiring dynamic credential rotation</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">09 </span>GitHub + FluxCD + OCI Registry Sources</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR (OCI Helm charts)</span></td>
+  <td><span class="tag tag-purple">Pulumi</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">FluxCD v2 OCI</span></td>
+  <td><span class="tag tag-orange">Cosign</span><span class="tag tag-orange">Notation</span></td>
+  <td><span class="tag tag-red">Grafana LGTM stack</span></td>
+  <td><span class="tag tag-teal">Multi-cloud</span></td>
+  <td class="unique-text">Helm charts stored as OCI artifacts alongside container images; signed with Cosign for supply-chain integrity.</td>
+  <td class="usecase-text">Modern platform teams standardizing on OCI for all artifact types</td>
+</tr>
+
+<tr class="data-row" data-group="gitops">
+  <td><div class="approach-name"><span class="approach-num">10 </span>Gitea + FluxCD (Air-Gapped GitOps)</div></td>
+  <td><span class="tag tag-blue">Gitea (self-hosted)</span></td>
+  <td><span class="tag tag-blue">Drone CI / Woodpecker CI</span></td>
+  <td><span class="tag tag-yellow">Harbor (self-hosted)</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">K3s / RKE2</span></td>
+  <td><span class="tag tag-purple">FluxCD</span></td>
+  <td><span class="tag tag-orange">Trivy (offline DB)</span><span class="tag tag-orange">Falco</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana (local)</span></td>
+  <td><span class="tag tag-teal">Air-gapped / Edge</span></td>
+  <td class="unique-text">100% air-gapped; all tooling self-contained. Gitea replaces GitHub, Harbor mirrors public registries for offline use.</td>
+  <td class="usecase-text">Defense, critical infrastructure, classified environments with no internet access</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 2: CI/CD-CENTRIC -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="cicd">
+<div class="group-header">
+  <div class="group-dot" style="background:#58a6ff"></div>
+  <h2>CI/CD-Centric Patterns</h2>
+  <span class="count" id="count-cicd">8</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">11 </span>GitHub Actions Full Stack</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span><span class="tag tag-yellow">npm / PyPI</span></td>
+  <td><span class="tag tag-purple">Terraform Cloud</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS / GKE / AKS</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">CodeQL</span><span class="tag tag-orange">Dependabot</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Entire pipeline in GitHub; Actions marketplace provides 20k+ reusable steps. Tight PR feedback loop with inline security results.</td>
+  <td class="usecase-text">Startups to mid-size companies fully committed to GitHub ecosystem</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">12 </span>GitLab All-in-One</div></td>
+  <td><span class="tag tag-blue">GitLab</span></td>
+  <td><span class="tag tag-blue">GitLab CI/CD</span></td>
+  <td><span class="tag tag-yellow">GitLab Registry</span><span class="tag tag-yellow">GitLab Package Registry</span></td>
+  <td><span class="tag tag-purple">GitLab Terraform Mgmt</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-green">Kubernetes (GitLab Agent)</span></td>
+  <td><span class="tag tag-purple">GitLab Environments</span></td>
+  <td><span class="tag tag-orange">GitLab SAST/DAST/Container Scan</span></td>
+  <td><span class="tag tag-red">GitLab Metrics</span><span class="tag tag-red">ELK</span></td>
+  <td><span class="tag tag-teal">Any / Self-hosted</span></td>
+  <td class="unique-text">Single platform for SCM, CI/CD, registry, IaC state, and security scanning — minimal vendor sprawl.</td>
+  <td class="usecase-text">Enterprises wanting consolidation, compliance-heavy teams, EE license holders</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">13 </span>Bitbucket + Jenkins + Nexus</div></td>
+  <td><span class="tag tag-blue">Bitbucket Server</span></td>
+  <td><span class="tag tag-blue">Jenkins (shared library)</span></td>
+  <td><span class="tag tag-yellow">Nexus Repository Manager</span></td>
+  <td><span class="tag tag-purple">Terraform</span><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-green">Kubernetes / OpenShift</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">SonarQube</span><span class="tag tag-orange">Nexus IQ</span><span class="tag tag-orange">OWASP ZAP</span></td>
+  <td><span class="tag tag-red">Splunk</span><span class="tag tag-red">Prometheus</span></td>
+  <td><span class="tag tag-teal">On-Prem / VMware</span></td>
+  <td class="unique-text">Battle-tested enterprise stack; Jenkins Shared Libraries enforce corporate standards across hundreds of pipelines.</td>
+  <td class="usecase-text">Large enterprises with legacy Jenkins investment, mixed VM+container workloads</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">14 </span>GitHub + CircleCI + Docker Hub</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">CircleCI</span></td>
+  <td><span class="tag tag-yellow">Docker Hub</span><span class="tag tag-yellow">Artifactory</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes (EKS)</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Snyk</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">New Relic</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">CircleCI Orbs accelerate pipeline authoring; docker-layer caching dramatically speeds container builds.</td>
+  <td class="usecase-text">Fast-moving product teams, Node.js/React stacks, startups with CI-first culture</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">15 </span>GitHub + Tekton Pipelines</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Tekton (in-cluster)</span></td>
+  <td><span class="tag tag-yellow">Quay.io / Harbor</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">OpenShift / Kubernetes</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Chains (supply chain)</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">OpenTelemetry</span><span class="tag tag-red">Jaeger</span></td>
+  <td><span class="tag tag-teal">Hybrid</span></td>
+  <td class="unique-text">CI runs as native Kubernetes workloads (CRDs); Tekton Chains auto-sign build provenance for SLSA compliance.</td>
+  <td class="usecase-text">OpenShift shops, teams needing SLSA Level 3 supply chain provenance</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">16 </span>GitHub + Buildkite (Self-Hosted Agents)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Buildkite</span></td>
+  <td><span class="tag tag-yellow">ECR</span><span class="tag tag-yellow">S3 (artifacts)</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Semgrep</span><span class="tag tag-orange">Snyk</span></td>
+  <td><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Build agents run on your own infra (EC2 spot, Mac Minis); SaaS orchestration without data leaving your network.</td>
+  <td class="usecase-text">Mobile/game studios needing macOS builders, security-conscious teams, massive build scale</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">17 </span>GitHub + Dagger (Portable Pipelines)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Dagger + GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Pulumi</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">OpenTelemetry</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Pipeline logic written in Go/Python/TypeScript and runs identically local and in CI — eliminates "works on my machine" CI issues.</td>
+  <td class="usecase-text">Developer experience teams, polyglot codebases, portable open-source projects</td>
+</tr>
+
+<tr class="data-row" data-group="cicd">
+  <td><div class="approach-name"><span class="approach-num">18 </span>GitHub + Argo Workflows (Data/ML)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Argo Workflows</span></td>
+  <td><span class="tag tag-yellow">S3 / GCS</span><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Vault</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">MLflow</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">DAG-based pipelines as Kubernetes CRDs; purpose-built for ML training, ETL, and batch compute workflows.</td>
+  <td class="usecase-text">ML/AI pipelines, data engineering, scientific computing on Kubernetes</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 3: CLOUD-NATIVE -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="cloudnative">
+<div class="group-header">
+  <div class="group-dot" style="background:#38bdf8"></div>
+  <h2>Cloud-Native Patterns</h2>
+  <span class="count" id="count-cloudnative">7</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">19 </span>AWS Native Stack</div></td>
+  <td><span class="tag tag-blue">CodeCommit / GitHub</span></td>
+  <td><span class="tag tag-blue">CodePipeline + CodeBuild</span></td>
+  <td><span class="tag tag-yellow">ECR</span><span class="tag tag-yellow">CodeArtifact</span></td>
+  <td><span class="tag tag-purple">CDK / CloudFormation</span></td>
+  <td><span class="tag tag-purple">Systems Manager</span></td>
+  <td><span class="tag tag-green">EKS / ECS / Lambda</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">GuardDuty</span><span class="tag tag-orange">Inspector</span><span class="tag tag-orange">Security Hub</span></td>
+  <td><span class="tag tag-red">CloudWatch</span><span class="tag tag-red">X-Ray</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Zero third-party tools; IAM-native RBAC, VPC-native security, AWS-native autoscaling. Minimal operational overhead.</td>
+  <td class="usecase-text">AWS-committed organisations, regulated workloads needing AWS FedRAMP/SOC2 controls</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">20 </span>Azure DevOps Full Stack</div></td>
+  <td><span class="tag tag-blue">Azure Repos</span></td>
+  <td><span class="tag tag-blue">Azure Pipelines</span></td>
+  <td><span class="tag tag-yellow">ACR</span><span class="tag tag-yellow">Azure Artifacts</span></td>
+  <td><span class="tag tag-purple">Bicep / ARM</span></td>
+  <td><span class="tag tag-purple">Azure App Config</span></td>
+  <td><span class="tag tag-green">AKS</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Defender for Containers</span><span class="tag tag-orange">Sentinel</span></td>
+  <td><span class="tag tag-red">Azure Monitor</span><span class="tag tag-red">App Insights</span></td>
+  <td><span class="tag tag-teal">Azure</span></td>
+  <td class="unique-text">Deep Microsoft integration: Entra ID SSO, Azure Boards work items linked to PRs, Defender for cloud-native security.</td>
+  <td class="usecase-text">Microsoft shops, .NET workloads, enterprises with EA/CSP agreements</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">21 </span>GCP Cloud Build + GKE Autopilot</div></td>
+  <td><span class="tag tag-blue">GitHub / Cloud Source Repos</span></td>
+  <td><span class="tag tag-blue">Cloud Build</span></td>
+  <td><span class="tag tag-yellow">Artifact Registry</span></td>
+  <td><span class="tag tag-purple">Deployment Manager / Terraform</span></td>
+  <td><span class="tag tag-purple">Config Connector</span></td>
+  <td><span class="tag tag-green">GKE Autopilot</span></td>
+  <td><span class="tag tag-purple">Cloud Deploy</span></td>
+  <td><span class="tag tag-orange">Container Analysis</span><span class="tag tag-orange">Binary Authorization</span></td>
+  <td><span class="tag tag-red">Cloud Monitoring</span><span class="tag tag-red">Cloud Logging</span></td>
+  <td><span class="tag tag-teal">GCP</span></td>
+  <td class="unique-text">GKE Autopilot eliminates node management; Binary Authorization ensures only signed images deploy to production.</td>
+  <td class="usecase-text">Data-heavy workloads (BigQuery integration), ML/AI, serverless-first organisations</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">22 </span>GitHub + AWS ECS Fargate</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">CDK</span></td>
+  <td><span class="tag tag-purple">ECS Task Definitions</span></td>
+  <td><span class="tag tag-green">ECS Fargate</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">GuardDuty</span><span class="tag tag-orange">Snyk</span></td>
+  <td><span class="tag tag-red">CloudWatch Container Insights</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">No Kubernetes complexity; serverless containers via Fargate. Lower operational burden for teams not needing K8s primitives.</td>
+  <td class="usecase-text">Microservices not needing K8s, teams avoiding cluster management overhead</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">23 </span>GitHub + Serverless Framework + Lambda</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">S3 (zip artifacts)</span></td>
+  <td><span class="tag tag-purple">Serverless Framework / SAM</span></td>
+  <td><span class="tag tag-purple">SSM Parameter Store</span></td>
+  <td><span class="tag tag-green">AWS Lambda</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Checkov</span><span class="tag tag-orange">OWASP dependency check</span></td>
+  <td><span class="tag tag-red">Lambda Powertools</span><span class="tag tag-red">X-Ray</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">No servers, no containers to manage; deploy functions in seconds. Event-driven architecture with per-invocation billing.</td>
+  <td class="usecase-text">Event-driven APIs, background jobs, webhook handlers, cost-sensitive workloads</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">24 </span>GitHub + Vercel / Netlify (Jamstack)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Vercel / Netlify CI</span></td>
+  <td><span class="tag tag-yellow">npm / CDN (built-in)</span></td>
+  <td><span class="tag tag-purple">Vercel Projects / Terraform</span></td>
+  <td><span class="tag tag-purple">Environment Variables</span></td>
+  <td><span class="tag tag-green">Edge Functions / CDN</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Snyk</span><span class="tag tag-orange">Dependabot</span></td>
+  <td><span class="tag tag-red">Vercel Analytics</span><span class="tag tag-red">Datadog RUM</span></td>
+  <td><span class="tag tag-teal">Edge / CDN</span></td>
+  <td class="unique-text">Preview deployments per PR out of the box; global edge network; zero infrastructure management for frontend teams.</td>
+  <td class="usecase-text">Next.js/React frontends, marketing sites, static sites, DX-focused product teams</td>
+</tr>
+
+<tr class="data-row" data-group="cloudnative">
+  <td><div class="approach-name"><span class="approach-num">25 </span>GitHub + Cloud Run (Serverless Containers)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Cloud Build / GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">Artifact Registry</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Cloud Run env vars</span></td>
+  <td><span class="tag tag-green">Cloud Run</span></td>
+  <td><span class="tag tag-purple">Cloud Deploy</span></td>
+  <td><span class="tag tag-orange">Binary Authorization</span><span class="tag tag-orange">Container Analysis</span></td>
+  <td><span class="tag tag-red">Cloud Trace</span><span class="tag tag-red">Cloud Logging</span></td>
+  <td><span class="tag tag-teal">GCP</span></td>
+  <td class="unique-text">Container-based serverless; scale-to-zero, HTTP-triggered, no cluster ops. Traffic splitting for canary releases.</td>
+  <td class="usecase-text">REST APIs, background workers, teams wanting containers without K8s management</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 4: KUBERNETES-NATIVE -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="k8s">
+<div class="group-header">
+  <div class="group-dot" style="background:#3fb950"></div>
+  <h2>Kubernetes-Native Patterns</h2>
+  <span class="count" id="count-k8s">6</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">26 </span>GitLab + OpenShift 4</div></td>
+  <td><span class="tag tag-blue">GitLab</span></td>
+  <td><span class="tag tag-blue">GitLab CI / OpenShift Pipelines (Tekton)</span></td>
+  <td><span class="tag tag-yellow">Quay Enterprise</span></td>
+  <td><span class="tag tag-purple">Terraform / ACM</span></td>
+  <td><span class="tag tag-purple">OpenShift GitOps Operator</span></td>
+  <td><span class="tag tag-green">OpenShift 4 (OCP)</span></td>
+  <td><span class="tag tag-purple">OpenShift GitOps (ArgoCD)</span></td>
+  <td><span class="tag tag-orange">ACS (StackRox)</span><span class="tag tag-orange">Compliance Operator</span></td>
+  <td><span class="tag tag-red">OpenShift Monitoring</span><span class="tag tag-red">Splunk</span></td>
+  <td><span class="tag tag-teal">On-Prem / ROSA / ARO</span></td>
+  <td class="unique-text">Red Hat-supported full-stack K8s with built-in SCCs, ACS for runtime threat detection, and FIPS compliance out of the box.</td>
+  <td class="usecase-text">Government, financial services, telco — regulated industries requiring supported enterprise K8s</td>
+</tr>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">27 </span>GitHub + Rancher + Longhorn</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions / Jenkins</span></td>
+  <td><span class="tag tag-yellow">Harbor</span></td>
+  <td><span class="tag tag-purple">Terraform + Rancher API</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">RKE2 (Rancher managed)</span></td>
+  <td><span class="tag tag-purple">Fleet (Rancher GitOps)</span></td>
+  <td><span class="tag tag-orange">NeuVector</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">On-Prem / Edge</span></td>
+  <td class="unique-text">Rancher centralises multi-cluster management; Fleet (GitOps) manages thousands of edge clusters; Longhorn provides cloud-native storage.</td>
+  <td class="usecase-text">Retail edge, manufacturing, telco edge, bare-metal K8s at scale</td>
+</tr>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">28 </span>GitHub + Crossplane (Control Plane)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Crossplane</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">OPA Gatekeeper</span><span class="tag tag-orange">Falco</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">AWS / Multi-cloud</span></td>
+  <td class="unique-text">Crossplane manages cloud resources (RDS, S3, etc.) as K8s CRDs — application AND infrastructure declared in the same Git repo.</td>
+  <td class="usecase-text">Platform engineering teams building Internal Developer Platforms (IDPs)</td>
+</tr>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">29 </span>GitHub + Cluster API (CAPI)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">Harbor</span></td>
+  <td><span class="tag tag-purple">Cluster API (CAPI)</span></td>
+  <td><span class="tag tag-purple">Kustomize</span></td>
+  <td><span class="tag tag-green">Kubernetes (self-managed)</span></td>
+  <td><span class="tag tag-purple">FluxCD</span></td>
+  <td><span class="tag tag-orange">Falco</span><span class="tag tag-orange">OPA</span></td>
+  <td><span class="tag tag-red">Thanos</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">Any (bare-metal / cloud)</span></td>
+  <td class="unique-text">CAPI treats Kubernetes cluster provisioning as a Kubernetes-native operation — manage clusters as K8s objects from a management cluster.</td>
+  <td class="usecase-text">Large orgs running hundreds of clusters, cloud-agnostic K8s providers</td>
+</tr>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">30 </span>GitHub + Service Mesh (Istio + ArgoCD)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm + Istio Operator</span></td>
+  <td><span class="tag tag-green">EKS + Istio</span></td>
+  <td><span class="tag tag-purple">ArgoCD + Argo Rollouts</span></td>
+  <td><span class="tag tag-orange">OPA</span><span class="tag tag-orange">Kiali</span><span class="tag tag-orange">mTLS</span></td>
+  <td><span class="tag tag-red">Jaeger</span><span class="tag tag-red">Kiali</span><span class="tag tag-red">Prometheus</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Istio provides mTLS between all services, traffic management, and fine-grained canary routing controlled by Argo Rollouts.</td>
+  <td class="usecase-text">Zero-trust microservices, advanced traffic shaping, compliance requiring encrypted service-to-service communication</td>
+</tr>
+
+<tr class="data-row" data-group="k8s">
+  <td><div class="approach-name"><span class="approach-num">31 </span>GitHub + K3s + Edge Deployments</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">Harbor (central)</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">K3s (edge nodes)</span></td>
+  <td><span class="tag tag-purple">FluxCD</span></td>
+  <td><span class="tag tag-orange">Falco</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Victoria Metrics</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">Edge / IoT</span></td>
+  <td class="unique-text">K3s's 512MB RAM footprint enables K8s on Raspberry Pi and industrial nodes; Flux syncs from central Git to thousands of edge devices.</td>
+  <td class="usecase-text">IoT, retail POS, industrial automation, telecom RAN, vehicle computing</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 5: PLATFORM ENGINEERING -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="platformeng">
+<div class="group-header">
+  <div class="group-dot" style="background:#ffa657"></div>
+  <h2>Platform Engineering Patterns</h2>
+  <span class="count" id="count-platformeng">5</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="platformeng">
+  <td><div class="approach-name"><span class="approach-num">32 </span>Backstage IDP + ArgoCD</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions / Jenkins</span></td>
+  <td><span class="tag tag-yellow">ECR / Harbor</span></td>
+  <td><span class="tag tag-purple">Terraform + Backstage Scaffolder</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS / GKE</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">OPA</span></td>
+  <td><span class="tag tag-red">Datadog</span><span class="tag tag-red">PagerDuty</span></td>
+  <td><span class="tag tag-teal">Multi-cloud</span></td>
+  <td class="unique-text">Backstage portal gives developers self-service: golden-path templates scaffold new services, provision infra, and register in service catalog automatically.</td>
+  <td class="usecase-text">Large engineering orgs (200+ devs) wanting to reduce cognitive load and enforce golden paths</td>
+</tr>
+
+<tr class="data-row" data-group="platformeng">
+  <td><div class="approach-name"><span class="approach-num">33 </span>Port.io + GitHub + ArgoCD</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Snyk</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Port.io is a lightweight IDP alternative to Backstage; software catalog with real-time scorecards, self-service actions, and RBAC without heavy maintenance.</td>
+  <td class="usecase-text">Teams wanting Backstage-like capabilities without the Backstage operational burden</td>
+</tr>
+
+<tr class="data-row" data-group="platformeng">
+  <td><div class="approach-name"><span class="approach-num">34 </span>Humanitec + GitHub + ArgoCD</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Humanitec Platform Orchestrator</span></td>
+  <td><span class="tag tag-purple">Helm (generated)</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Vault</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Score (open standard) defines app topology; Humanitec translates to environment-specific K8s manifests. Dev teams never write Helm/YAML directly.</td>
+  <td class="usecase-text">Platform engineering teams abstracting Kubernetes from application developers</td>
+</tr>
+
+<tr class="data-row" data-group="platformeng">
+  <td><div class="approach-name"><span class="approach-num">35 </span>GitHub + Pulumi + ESC (Environments)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Pulumi IaC (TypeScript)</span></td>
+  <td><span class="tag tag-purple">Pulumi ESC</span></td>
+  <td><span class="tag tag-green">EKS / GKE</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Pulumi Policy (CrossGuard)</span></td>
+  <td><span class="tag tag-red">OpenTelemetry</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">Multi-cloud</span></td>
+  <td class="unique-text">IaC in real programming languages (TypeScript/Python/Go) with unit tests. Pulumi ESC centralises secrets and config across all environments.</td>
+  <td class="usecase-text">Developer-centric platform teams, polyglot engineers preferring code over DSL</td>
+</tr>
+
+<tr class="data-row" data-group="platformeng">
+  <td><div class="approach-name"><span class="approach-num">36 </span>GitHub + Score + Radius</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Radius (Microsoft)</span></td>
+  <td><span class="tag tag-purple">Bicep / Helm</span></td>
+  <td><span class="tag tag-green">AKS / Kubernetes</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Defender for Containers</span></td>
+  <td><span class="tag tag-red">Azure Monitor</span></td>
+  <td><span class="tag tag-teal">Azure / Any</span></td>
+  <td class="unique-text">Radius is Microsoft's open-source application model; devs define app + infra dependencies portably without K8s YAML knowledge.</td>
+  <td class="usecase-text">Azure-native platform teams, emerging cloud-agnostic application model adopters</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 6: DEVSECOPS -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="devsecops">
+<div class="group-header">
+  <div class="group-dot" style="background:#ff7b72"></div>
+  <h2>DevSecOps Patterns</h2>
+  <span class="count" id="count-devsecops">6</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">37 </span>Shift-Left Security (GitHub + Snyk)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform + Checkov</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Snyk Code</span><span class="tag tag-orange">Snyk Container</span><span class="tag tag-orange">Snyk IaC</span><span class="tag tag-orange">GHAS</span></td>
+  <td><span class="tag tag-red">Datadog Security</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Security feedback in IDE and PR — SAST, SCA, container scanning, IaC scanning all before merge. Single Snyk pane across all layers.</td>
+  <td class="usecase-text">Fast-shipping product teams embedding security without dedicated AppSec gate</td>
+</tr>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">38 </span>Supply Chain Security (SLSA + Sigstore)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR + Rekor (transparency log)</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Cosign</span><span class="tag tag-orange">Fulcio</span><span class="tag tag-orange">Rekor</span><span class="tag tag-orange">Syft (SBOM)</span></td>
+  <td><span class="tag tag-red">Grafana</span><span class="tag tag-red">OpenTelemetry</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Every artifact signed, SBOM generated, and provenance attested. K8s admission controller rejects unsigned images. SLSA Level 3 achievable.</td>
+  <td class="usecase-text">Critical infrastructure, financial services, US federal (EO 14028 compliance)</td>
+</tr>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">39 </span>GitLab Ultimate Security Pipeline</div></td>
+  <td><span class="tag tag-blue">GitLab</span></td>
+  <td><span class="tag tag-blue">GitLab CI/CD</span></td>
+  <td><span class="tag tag-yellow">GitLab Registry</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-green">Kubernetes / OpenShift</span></td>
+  <td><span class="tag tag-purple">GitLab Environments</span></td>
+  <td><span class="tag tag-orange">GitLab SAST</span><span class="tag tag-orange">DAST</span><span class="tag tag-orange">Secret Detection</span><span class="tag tag-orange">Dependency Scanning</span><span class="tag tag-orange">Container Scanning</span><span class="tag tag-orange">IaC Scanning</span></td>
+  <td><span class="tag tag-red">GitLab Metrics</span><span class="tag tag-red">ELK</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">GitLab Ultimate bundles ALL security scanners natively into the pipeline — single vendor, single vulnerability dashboard, license compliance built-in.</td>
+  <td class="usecase-text">Enterprises wanting turnkey DevSecOps without assembling point products</td>
+</tr>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">40 </span>GitHub + Aqua Security Platform</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">Aqua Registry</span><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS / OpenShift</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Aqua Scanner</span><span class="tag tag-orange">Aqua Runtime (eBPF)</span><span class="tag tag-orange">Aqua CSPM</span></td>
+  <td><span class="tag tag-red">Aqua Insights</span><span class="tag tag-red">Splunk</span></td>
+  <td><span class="tag tag-teal">AWS / Multi-cloud</span></td>
+  <td class="unique-text">eBPF-based runtime security detects anomalies at kernel level; full-lifecycle coverage from code to cloud in one platform.</td>
+  <td class="usecase-text">Enterprise containers requiring CIS benchmark enforcement, runtime threat detection</td>
+</tr>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">41 </span>GitHub + Wiz + OPA Policy-as-Code</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform + Wiz IaC</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD + OPA Gatekeeper</span></td>
+  <td><span class="tag tag-orange">Wiz (CNAPP)</span><span class="tag tag-orange">OPA Gatekeeper</span><span class="tag tag-orange">Falco</span></td>
+  <td><span class="tag tag-red">Wiz Security Graph</span><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS</span></td>
+  <td class="unique-text">Wiz builds a security graph of the entire cloud estate; OPA enforces K8s policies; Falco detects runtime anomalies. Three layers of defence.</td>
+  <td class="usecase-text">Cloud-first enterprises with complex multi-account AWS environments requiring unified CNAPP</td>
+</tr>
+
+<tr class="data-row" data-group="devsecops">
+  <td><div class="approach-name"><span class="approach-num">42 </span>GitHub + OWASP ZAP + Semgrep (AppSec)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">Kubernetes</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Semgrep (SAST)</span><span class="tag tag-orange">OWASP ZAP (DAST)</span><span class="tag tag-orange">Trivy (SCA)</span><span class="tag tag-orange">TruffleHog (secrets)</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">ELK</span></td>
+  <td><span class="tag tag-teal">Any</span></td>
+  <td class="unique-text">Open-source security toolchain — zero licence cost. ZAP automated DAST against staging; Semgrep custom rules for org-specific vulnerability patterns.</td>
+  <td class="usecase-text">Startups and scale-ups wanting comprehensive AppSec without enterprise tool budgets</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 7: MULTI-CLOUD -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="multicloud">
+<div class="group-header">
+  <div class="group-dot" style="background:#38bdf8"></div>
+  <h2>Multi-Cloud Patterns</h2>
+  <span class="count" id="count-multicloud">4</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="multicloud">
+  <td><div class="approach-name"><span class="approach-num">43 </span>GitHub + Terraform Cloud + Multi-Cloud</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR + ACR + Artifact Registry</span></td>
+  <td><span class="tag tag-purple">Terraform Cloud (workspaces)</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS + AKS + GKE</span></td>
+  <td><span class="tag tag-purple">ArgoCD (multi-cluster)</span></td>
+  <td><span class="tag tag-orange">Prisma Cloud</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Datadog (unified)</span></td>
+  <td><span class="tag tag-teal">AWS + Azure + GCP</span></td>
+  <td class="unique-text">Terraform Cloud workspaces per cloud; single ArgoCD instance manages clusters across all three clouds from one control plane.</td>
+  <td class="usecase-text">Cloud-agnostic enterprises, avoiding vendor lock-in, M&A scenarios requiring multi-cloud</td>
+</tr>
+
+<tr class="data-row" data-group="multicloud">
+  <td><div class="approach-name"><span class="approach-num">44 </span>Anthos / GKE Multi-Cloud</div></td>
+  <td><span class="tag tag-blue">GitHub / Cloud Source Repos</span></td>
+  <td><span class="tag tag-blue">Cloud Build</span></td>
+  <td><span class="tag tag-yellow">Artifact Registry</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Config Management (Anthos)</span></td>
+  <td><span class="tag tag-green">Anthos (GKE + EKS + AKS attached)</span></td>
+  <td><span class="tag tag-purple">Anthos Config Management (ACM)</span></td>
+  <td><span class="tag tag-orange">Anthos Service Mesh</span><span class="tag tag-orange">Binary Auth</span></td>
+  <td><span class="tag tag-red">Cloud Ops (Stackdriver)</span><span class="tag tag-red">Managed Prometheus</span></td>
+  <td><span class="tag tag-teal">GCP + AWS + Azure + On-Prem</span></td>
+  <td class="unique-text">GCP Anthos attaches non-GCP clusters under a single control plane; ACM syncs policy/config across all attached clusters.</td>
+  <td class="usecase-text">GCP-primary enterprises extending to other clouds, hybrid-cloud policy enforcement</td>
+</tr>
+
+<tr class="data-row" data-group="multicloud">
+  <td><div class="approach-name"><span class="approach-num">45 </span>GitHub + Pulumi + Multi-Cloud IaC</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">GHCR</span></td>
+  <td><span class="tag tag-purple">Pulumi (Go/TypeScript)</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS / AKS / GKE</span></td>
+  <td><span class="tag tag-purple">FluxCD</span></td>
+  <td><span class="tag tag-orange">Checkov</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">OpenTelemetry</span><span class="tag tag-red">Grafana Cloud</span></td>
+  <td><span class="tag tag-teal">AWS + Azure + GCP</span></td>
+  <td class="unique-text">Single Pulumi program provisions resources across multiple clouds in one typed language — no HCL, real unit tests for infra code.</td>
+  <td class="usecase-text">Engineering-led organisations treating infra as software, ISVs deploying to customer clouds</td>
+</tr>
+
+<tr class="data-row" data-group="multicloud">
+  <td><div class="approach-name"><span class="approach-num">46 </span>GitHub + Env0 + Multi-Cloud IaC Governance</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR</span></td>
+  <td><span class="tag tag-purple">Terraform + Env0</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS + AKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">OPA (Env0 policies)</span><span class="tag tag-orange">Trivy</span></td>
+  <td><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS + Azure</span></td>
+  <td class="unique-text">Env0 adds cost visibility, drift detection, and environment TTLs on top of Terraform — auto-destroys ephemeral envs saving cloud spend.</td>
+  <td class="usecase-text">Cost-conscious multi-cloud orgs, ephemeral environment sprawl prevention</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 8: HYBRID CLOUD -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="hybrid">
+<div class="group-header">
+  <div class="group-dot" style="background:#d2a8ff"></div>
+  <h2>Hybrid-Cloud Patterns</h2>
+  <span class="count" id="count-hybrid">4</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="hybrid">
+  <td><div class="approach-name"><span class="approach-num">47 </span>Azure Arc + GitHub + AKS</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ACR</span></td>
+  <td><span class="tag tag-purple">Bicep / Terraform</span></td>
+  <td><span class="tag tag-purple">Azure Policy / GitOps (Flux)</span></td>
+  <td><span class="tag tag-green">AKS + Arc-enabled K8s (on-prem)</span></td>
+  <td><span class="tag tag-purple">FluxCD (Arc GitOps)</span></td>
+  <td><span class="tag tag-orange">Defender for Cloud</span><span class="tag tag-orange">Sentinel</span></td>
+  <td><span class="tag tag-red">Azure Monitor</span><span class="tag tag-red">Container Insights</span></td>
+  <td><span class="tag tag-teal">Azure + On-Prem</span></td>
+  <td class="unique-text">Azure Arc projects on-prem/edge K8s clusters into Azure portal; apply Azure Policy, Defender, and GitOps uniformly across hybrid estate.</td>
+  <td class="usecase-text">Enterprises with on-prem data centres + Azure cloud, retail (store + cloud), healthcare</td>
+</tr>
+
+<tr class="data-row" data-group="hybrid">
+  <td><div class="approach-name"><span class="approach-num">48 </span>AWS Outposts + EKS Anywhere</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">ECR (local gateway)</span></td>
+  <td><span class="tag tag-purple">CDK</span></td>
+  <td><span class="tag tag-purple">Systems Manager (hybrid)</span></td>
+  <td><span class="tag tag-green">EKS Anywhere (on-prem) + EKS (cloud)</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">GuardDuty</span><span class="tag tag-orange">Inspector</span></td>
+  <td><span class="tag tag-red">CloudWatch</span><span class="tag tag-red">Prometheus</span></td>
+  <td><span class="tag tag-teal">AWS + On-Prem</span></td>
+  <td class="unique-text">AWS-managed hardware on-prem; EKS Anywhere gives identical K8s API on-prem and in cloud — same tooling, same APIs, hybrid burst.</td>
+  <td class="usecase-text">Low-latency on-prem workloads with cloud burst, data residency requirements</td>
+</tr>
+
+<tr class="data-row" data-group="hybrid">
+  <td><div class="approach-name"><span class="approach-num">49 </span>GitHub + VMware Tanzu (TKG)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">GitHub Actions / Concourse</span></td>
+  <td><span class="tag tag-yellow">Harbor (Tanzu)</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Carvel (ytt/kapp)</span></td>
+  <td><span class="tag tag-green">TKG (Tanzu K8s Grid)</span></td>
+  <td><span class="tag tag-purple">ArgoCD / Carvel kapp-controller</span></td>
+  <td><span class="tag tag-orange">Tanzu Mission Control</span><span class="tag tag-orange">Carbon Black</span></td>
+  <td><span class="tag tag-red">Tanzu Observability</span><span class="tag tag-red">Wavefront</span></td>
+  <td><span class="tag tag-teal">vSphere + AWS + Azure</span></td>
+  <td class="unique-text">Tanzu runs on vSphere (existing VMware investment); TKG provides consistent K8s across vSphere, AWS, and Azure from single control plane.</td>
+  <td class="usecase-text">Large enterprises with VMware ELA, modernising from VMs to containers incrementally</td>
+</tr>
+
+<tr class="data-row" data-group="hybrid">
+  <td><div class="approach-name"><span class="approach-num">50 </span>GitHub + Red Hat ACM (Multi-cluster)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">OpenShift Pipelines (Tekton)</span></td>
+  <td><span class="tag tag-yellow">Quay</span></td>
+  <td><span class="tag tag-purple">ACM Policies / Terraform</span></td>
+  <td><span class="tag tag-purple">ACM GitOps (ArgoCD)</span></td>
+  <td><span class="tag tag-green">OpenShift (hub + spoke)</span></td>
+  <td><span class="tag tag-purple">Red Hat ACM + ArgoCD</span></td>
+  <td><span class="tag tag-orange">ACS (StackRox)</span><span class="tag tag-orange">Compliance Operator</span></td>
+  <td><span class="tag tag-red">ACM Observability</span><span class="tag tag-red">Thanos</span></td>
+  <td><span class="tag tag-teal">On-Prem + AWS (ROSA) + Azure (ARO)</span></td>
+  <td class="unique-text">ACM provides hub-spoke multi-cluster governance: policy enforcement, fleet config, and observability across hybrid OpenShift clusters.</td>
+  <td class="usecase-text">Telco, government, financial services — large OpenShift fleets spanning on-prem and managed cloud</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 9: ON-PREMISES -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="onprem">
+<div class="group-header">
+  <div class="group-dot" style="background:#ffa657"></div>
+  <h2>On-Premises Patterns</h2>
+  <span class="count" id="count-onprem">5</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="onprem">
+  <td><div class="approach-name"><span class="approach-num">51 </span>GitLab + Jenkins + Nexus + OpenShift</div></td>
+  <td><span class="tag tag-blue">GitLab (self-hosted)</span></td>
+  <td><span class="tag tag-blue">Jenkins</span></td>
+  <td><span class="tag tag-yellow">Nexus + Quay (on-prem)</span></td>
+  <td><span class="tag tag-purple">Ansible + Terraform</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-green">OpenShift 4 (bare-metal)</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">SonarQube</span><span class="tag tag-orange">ACS</span><span class="tag tag-orange">Nessus</span></td>
+  <td><span class="tag tag-red">Splunk (on-prem)</span><span class="tag tag-red">Prometheus</span></td>
+  <td><span class="tag tag-teal">Bare-metal / Private DC</span></td>
+  <td class="unique-text">100% on-premises; no external SaaS. Jenkins provides mature pipeline ecosystem; Nexus proxies external registries with caching.</td>
+  <td class="usecase-text">SCIF environments, classified government, high-security financial institutions</td>
+</tr>
+
+<tr class="data-row" data-group="onprem">
+  <td><div class="approach-name"><span class="approach-num">52 </span>Gitea + Drone CI + Harbor + K3s</div></td>
+  <td><span class="tag tag-blue">Gitea</span></td>
+  <td><span class="tag tag-blue">Drone CI</span></td>
+  <td><span class="tag tag-yellow">Harbor</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">K3s</span></td>
+  <td><span class="tag tag-purple">FluxCD / ArgoCD</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Falco</span></td>
+  <td><span class="tag tag-red">Prometheus</span><span class="tag tag-red">Grafana</span></td>
+  <td><span class="tag tag-teal">On-Prem / Bare-metal</span></td>
+  <td class="unique-text">Ultra-lightweight all-open-source stack; entire toolchain fits on modest hardware. YAML-based Drone pipelines are simple to understand.</td>
+  <td class="usecase-text">Small orgs, research labs, embedded systems shops running own bare-metal</td>
+</tr>
+
+<tr class="data-row" data-group="onprem">
+  <td><div class="approach-name"><span class="approach-num">53 </span>GitHub Enterprise + Jenkins + Artifactory</div></td>
+  <td><span class="tag tag-blue">GitHub Enterprise Server</span></td>
+  <td><span class="tag tag-blue">Jenkins (HA)</span></td>
+  <td><span class="tag tag-yellow">JFrog Artifactory</span></td>
+  <td><span class="tag tag-purple">Terraform Enterprise</span></td>
+  <td><span class="tag tag-purple">Ansible Tower / AWX</span></td>
+  <td><span class="tag tag-green">OpenShift / Kubernetes</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">JFrog Xray</span><span class="tag tag-orange">Checkmarx</span><span class="tag tag-orange">Fortify</span></td>
+  <td><span class="tag tag-red">Splunk</span><span class="tag tag-red">AppDynamics</span></td>
+  <td><span class="tag tag-teal">On-Prem / Private Cloud</span></td>
+  <td class="unique-text">JFrog Platform (Artifactory + Xray) provides universal artifact management with deep vulnerability scanning across all package types.</td>
+  <td class="usecase-text">Large enterprises with complex multi-language artifact management, JFrog licence holders</td>
+</tr>
+
+<tr class="data-row" data-group="onprem">
+  <td><div class="approach-name"><span class="approach-num">54 </span>Bitbucket DC + Bamboo + Artifactory</div></td>
+  <td><span class="tag tag-blue">Bitbucket Data Center</span></td>
+  <td><span class="tag tag-blue">Bamboo Data Center</span></td>
+  <td><span class="tag tag-yellow">Artifactory</span><span class="tag tag-yellow">Docker Registry (local)</span></td>
+  <td><span class="tag tag-purple">Terraform / Ansible</span></td>
+  <td><span class="tag tag-purple">Ansible / Chef</span></td>
+  <td><span class="tag tag-green">Kubernetes (on-prem)</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">SonarQube</span><span class="tag tag-orange">Nexus IQ</span><span class="tag tag-orange">Fortify</span></td>
+  <td><span class="tag tag-red">Splunk</span><span class="tag tag-red">Dynatrace</span></td>
+  <td><span class="tag tag-teal">On-Prem / Private Cloud</span></td>
+  <td class="unique-text">Full Atlassian Data Center stack; Jira tickets linked end-to-end to Bamboo builds. Mature ITSM integration with ServiceNow change management.</td>
+  <td class="usecase-text">ITIL-heavy enterprises, telcos, utilities with change management gates</td>
+</tr>
+
+<tr class="data-row" data-group="onprem">
+  <td><div class="approach-name"><span class="approach-num">55 </span>GitHub + Ansible AWX + VM-based (No K8s)</div></td>
+  <td><span class="tag tag-blue">GitHub Enterprise</span></td>
+  <td><span class="tag tag-blue">GitHub Actions (self-hosted runners)</span></td>
+  <td><span class="tag tag-yellow">Nexus (RPM/DEB/Docker)</span></td>
+  <td><span class="tag tag-purple">Terraform + Packer</span></td>
+  <td><span class="tag tag-purple">Ansible AWX</span></td>
+  <td><span class="tag tag-green">VMs (VMware / KVM)</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">OpenSCAP</span><span class="tag tag-orange">ClamAV</span><span class="tag tag-orange">Wazuh</span></td>
+  <td><span class="tag tag-red">Prometheus (node_exporter)</span><span class="tag tag-red">ELK</span></td>
+  <td><span class="tag tag-teal">VMware / KVM On-Prem</span></td>
+  <td class="unique-text">No containers or K8s; deploys to traditional VMs via Ansible. Packer bakes immutable VM images. Legacy-compatible DevOps for non-containerised workloads.</td>
+  <td class="usecase-text">Legacy applications, COBOL/mainframe-adjacent systems, VM-bound licensed software</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GROUP 10: ENTERPRISE -->
+<!-- ============================================================ -->
+<div class="group-section" data-group="enterprise">
+<div class="group-header">
+  <div class="group-dot" style="background:#d4b54a"></div>
+  <h2>Enterprise Patterns</h2>
+  <span class="count" id="count-enterprise">5</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>#&nbsp;&nbsp;Approach Name</th>
+  <th>Source Control</th>
+  <th>CI/CD Tool</th>
+  <th>Artifact / Registry</th>
+  <th>IaC / Provisioning</th>
+  <th>Config Mgmt</th>
+  <th>Container / K8s Platform</th>
+  <th>GitOps Tool</th>
+  <th>Security Tools</th>
+  <th>Monitoring & Logging</th>
+  <th>Cloud / Platform</th>
+  <th>What Makes It Unique</th>
+  <th>Typical Use Cases</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="data-row" data-group="enterprise">
+  <td><div class="approach-name"><span class="approach-num">56 </span>GitHub GHES + Harness CD</div></td>
+  <td><span class="tag tag-blue">GitHub Enterprise Server</span></td>
+  <td><span class="tag tag-blue">Harness CI + CD</span></td>
+  <td><span class="tag tag-yellow">JFrog Artifactory</span></td>
+  <td><span class="tag tag-purple">Terraform Enterprise</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS / OpenShift</span></td>
+  <td><span class="tag tag-purple">Harness GitOps</span></td>
+  <td><span class="tag tag-orange">Harness SSCA</span><span class="tag tag-orange">Snyk</span></td>
+  <td><span class="tag tag-red">Harness CV (Continuous Verification)</span><span class="tag tag-red">Datadog</span></td>
+  <td><span class="tag tag-teal">AWS / Multi-cloud</span></td>
+  <td class="unique-text">Harness ML-powered deployment verification auto-rolls back if APM metrics degrade post-deploy. DORA metrics built-in for exec reporting.</td>
+  <td class="usecase-text">Large enterprises requiring deployment intelligence, automated rollback, and executive DORA metrics dashboards</td>
+</tr>
+
+<tr class="data-row" data-group="enterprise">
+  <td><div class="approach-name"><span class="approach-num">57 </span>Azure DevOps Enterprise + SAFe</div></td>
+  <td><span class="tag tag-blue">Azure Repos</span></td>
+  <td><span class="tag tag-blue">Azure Pipelines (YAML + Classic)</span></td>
+  <td><span class="tag tag-yellow">ACR + Azure Artifacts</span></td>
+  <td><span class="tag tag-purple">Bicep + Terraform</span></td>
+  <td><span class="tag tag-purple">Azure App Config</span></td>
+  <td><span class="tag tag-green">AKS</span></td>
+  <td><span class="tag tag-purple">—</span></td>
+  <td><span class="tag tag-orange">Defender for DevOps</span><span class="tag tag-orange">GHAS for Azure</span></td>
+  <td><span class="tag tag-red">Azure Monitor</span><span class="tag tag-red">App Insights</span><span class="tag tag-red">Dynatrace</span></td>
+  <td><span class="tag tag-teal">Azure</span></td>
+  <td class="unique-text">Azure Boards mapped to SAFe PI Planning; release trains triggered from PI objectives. ITSM integration with ServiceNow for change approvals.</td>
+  <td class="usecase-text">Scaled agile enterprises (SAFe/LeSS), insurance, banking, government with change management</td>
+</tr>
+
+<tr class="data-row" data-group="enterprise">
+  <td><div class="approach-name"><span class="approach-num">58 </span>GitHub + Spinnaker (Multi-cloud CD)</div></td>
+  <td><span class="tag tag-blue">GitHub</span></td>
+  <td><span class="tag tag-blue">Jenkins / GitHub Actions (CI)</span></td>
+  <td><span class="tag tag-yellow">ECR + GCR</span></td>
+  <td><span class="tag tag-purple">Terraform</span></td>
+  <td><span class="tag tag-purple">Helm</span></td>
+  <td><span class="tag tag-green">EKS + GKE + EC2</span></td>
+  <td><span class="tag tag-purple">Spinnaker</span></td>
+  <td><span class="tag tag-orange">Trivy</span><span class="tag tag-orange">Prisma</span></td>
+  <td><span class="tag tag-red">Datadog</span><span class="tag tag-red">New Relic</span></td>
+  <td><span class="tag tag-teal">AWS + GCP</span></td>
+  <td class="unique-text">Spinnaker's pipeline stages model deployment across EKS, EC2, and GKE with built-in canary analysis, manual judgments, and multi-cloud abstraction.</td>
+  <td class="usecase-text">Netflix-style engineering cultures, orgs deploying to mixed EC2+containers+multi-cloud</td>
+</tr>
+
+<tr class="data-row" data-group="enterprise">
+  <td><div class="approach-name"><span class="approach-num">59 </span>GitHub + CloudBees CI (Enterprise Jenkins)</div></td>
+  <td><span class="tag tag-blue">GitHub Enterprise</span></td>
+  <td><span class="tag tag-blue">CloudBees CI (managed Jenkins)</span></td>
+  <td><span class="tag tag-yellow">JFrog Artifactory</span><span class="tag tag-yellow">Nexus</span></td>
+  <td><span class="tag tag-purple">Terraform Enterprise</span></td>
+  <td><span class="tag tag-purple">Ansible Tower</span></td>
+  <td><span class="tag tag-green">Kubernetes / OpenShift</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Checkmarx</span><span class="tag tag-orange">Fortify</span><span class="tag tag-orange">Nexus Lifecycle</span></td>
+  <td><span class="tag tag-red">Dynatrace</span><span class="tag tag-red">Splunk</span></td>
+  <td><span class="tag tag-teal">On-Prem / Hybrid</span></td>
+  <td class="unique-text">CloudBees adds enterprise features to Jenkins: RBAC, HA controller, audit logs, pipeline templates (Pipeline-as-Code at scale across 1000s of teams).</td>
+  <td class="usecase-text">Large enterprises (Fortune 500) with massive existing Jenkins investment and compliance requirements</td>
+</tr>
+
+<tr class="data-row" data-group="enterprise">
+  <td><div class="approach-name"><span class="approach-num">60 </span>GitHub + ServiceNow Change Management</div></td>
+  <td><span class="tag tag-blue">GitHub Enterprise</span></td>
+  <td><span class="tag tag-blue">GitHub Actions</span></td>
+  <td><span class="tag tag-yellow">JFrog Artifactory</span></td>
+  <td><span class="tag tag-purple">Terraform Enterprise</span></td>
+  <td><span class="tag tag-purple">Ansible</span></td>
+  <td><span class="tag tag-green">AKS / EKS</span></td>
+  <td><span class="tag tag-purple">ArgoCD</span></td>
+  <td><span class="tag tag-orange">Veracode</span><span class="tag tag-orange">Qualys</span></td>
+  <td><span class="tag tag-red">Dynatrace</span><span class="tag tag-red">ServiceNow ITOM</span></td>
+  <td><span class="tag tag-teal">Azure / AWS / On-Prem</span></td>
+  <td class="unique-text">GitHub Actions creates ServiceNow Change Requests and awaits approval before production deploy — bridges DevOps velocity with ITSM governance gates.</td>
+  <td class="usecase-text">ITIL-governed enterprises, banks, insurers requiring CAB approval before every production change</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="noResults" class="no-results hidden">No patterns match your search. Try different keywords.</div>
+
+</div>
+
+<script>
+let activeGroup = 'all';
+let searchTerm = '';
+
+function filterGroup(group, btn) {
+  activeGroup = group;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchTerm = this.value.toLowerCase().trim();
+  applyFilters();
+});
+
+function applyFilters() {
+  const groups = document.querySelectorAll('.group-section');
+  let totalVisible = 0;
+
+  groups.forEach(group => {
+    const groupName = group.getAttribute('data-group');
+    const rows = group.querySelectorAll('tr.data-row');
+    let groupVisible = 0;
+
+    const showGroup = (activeGroup === 'all' || activeGroup === groupName);
+
+    rows.forEach(row => {
+      const rowGroup = row.getAttribute('data-group');
+      const matchesGroup = (activeGroup === 'all' || activeGroup === rowGroup);
+      const rowText = row.textContent.toLowerCase();
+      const matchesSearch = !searchTerm || rowText.includes(searchTerm);
+
+      if (matchesGroup && matchesSearch) {
+        row.classList.remove('hidden');
+        groupVisible++;
+        totalVisible++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    const groupHeader = group.querySelector('.group-header');
+    const tableWrap = group.querySelector('.table-wrap');
+    const countEl = group.querySelector('.count');
+
+    if (groupVisible === 0 || !showGroup) {
+      if (activeGroup !== 'all' && !showGroup) {
+        group.classList.add('hidden');
+      } else if (groupVisible === 0) {
+        group.classList.add('hidden');
+      }
+    } else {
+      group.classList.remove('hidden');
+      if (countEl) countEl.textContent = groupVisible;
+    }
+  });
+
+  document.getElementById('statsLabel').textContent = totalVisible + ' pattern' + (totalVisible !== 1 ? 's' : '');
+  document.getElementById('noResults').classList.toggle('hidden', totalVisible > 0);
+}
+</script>
+</body>
+</html>
